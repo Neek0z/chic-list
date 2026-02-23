@@ -20,6 +20,15 @@ Application de liste de courses partagée en temps réel : plusieurs personnes p
   - `lists/{listId}` : `allow read, write: if request.auth != null;`  
   (Firebase Console → Firestore → Règles.)
 
+## Sécurité
+
+- **Clé API Firebase** : la `apiKey` dans le front est publique par design ; la sécurité repose sur **Auth** et les **règles Firestore**, pas sur le secret de la clé.
+- **Règles Firestore** : indispensables. Sans règles restrictives, n’importe qui pourrait lire/écrire. Les règles ci‑dessus limitent l’accès aux utilisateurs connectés et à leurs données.
+- **Authentification** : seuls les utilisateurs connectés (Google) accèdent à l’app ; les listes sont liées à `users/{userId}/lists`.
+- **Code de partage** : validé côté client (6 caractères A‑Z/0‑9 uniquement) pour ne pas utiliser d’IDs de document arbitraires.
+- **Données sensibles** : aucun mot de passe ni token en clair ; le `localStorage` ne contient que l’ID de la liste active et la préférence thème.
+- **Contenu utilisateur** : les noms d’articles/listes sont affichés via React (échappés par défaut), pas via `dangerouslySetInnerHTML`.
+
 ## Project info (Lovable)
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID

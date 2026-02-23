@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, ChevronDown, LogOut, Pencil, Check, X, Copy, UserPlus, Share2 } from 'lucide-react';
-import { GroceryList } from '@/types/grocery';
+import { GroceryList, isValidShareCode } from '@/types/grocery';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
@@ -49,7 +49,10 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
 
   const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase();
-    if (!code) return;
+    if (!code || !isValidShareCode(code)) {
+      toast.error('Code invalide (6 caractères attendus)');
+      return;
+    }
 
     try {
       const ref = doc(db, 'lists', code);

@@ -14,11 +14,19 @@ export interface GroceryList {
   items: GroceryItem[];
 }
 
+const SHARE_CODE_LENGTH = 6;
+const SHARE_CODE_REGEX = /^[A-Z0-9]{6}$/;
+
 export function generateShareCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < SHARE_CODE_LENGTH; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
+}
+
+/** Valide un code de partage (6 caractères A-Z, 2-9) pour éviter l’usage de doc IDs arbitraires. */
+export function isValidShareCode(code: string): boolean {
+  return typeof code === 'string' && SHARE_CODE_REGEX.test(code.trim().toUpperCase());
 }
 
 export type DisplayMode = 'category' | 'aisle' | 'all';

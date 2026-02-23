@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { GroceryList, GroceryItem, generateShareCode } from '@/types/grocery';
+import { GroceryList, GroceryItem, generateShareCode, isValidShareCode } from '@/types/grocery';
 import { db } from '@/lib/firebase';
 import {
   collection,
@@ -208,8 +208,9 @@ export function useGroceryList() {
   const joinByShareCode = useCallback(
     (code: string, serverList?: GroceryList) => {
       if (!userId) return;
+      if (!isValidShareCode(code)) return;
 
-      const normalizedCode = code.toUpperCase();
+      const normalizedCode = code.trim().toUpperCase();
       const membershipRef = doc(db, 'users', userId, 'lists', normalizedCode);
       void setDoc(membershipRef, {
         shareCode: normalizedCode,
