@@ -48,36 +48,52 @@ export function useGroceryList() {
 
     const userListsCol = collection(db, 'users', userId, 'lists');
 
-    const unsubscribe = onSnapshot(userListsCol, async (snapshot) => {
-      if (snapshot.empty) {
+    const unsubscribe = onSnapshot(
+      userListsCol,
+      (snapshot) => {
+        if (snapshot.empty) {
+          const newList: GroceryList = {
+            id: createId(),
+            shareCode: generateShareCode(),
+            name: 'Ma Liste',
+            items: [],
+          };
+          // Mettre à jour l'UI tout de suite pour ne pas rester sur "Chargement des listes"
+          setJoinedShareCodes([newList.shareCode]);
+          setLists([newList]);
+          setActiveListId(newList.id);
+          localStorage.setItem(ACTIVE_KEY, newList.id);
+          // Écriture Firestore en arrière-plan (si les règles le permettent)
+          const listRef = listDocRef(newList.shareCode);
+          const membershipRef = doc(userListsCol, newList.shareCode);
+          setDoc(listRef, newList)
+            .then(() => setDoc(membershipRef, { shareCode: newList.shareCode, name: newList.name }))
+            .catch(() => {});
+          return;
+        }
+
+        const shareCodes = snapshot.docs
+          .map(d => (d.data().shareCode as string | undefined) ?? d.id)
+          .filter(Boolean);
+        setJoinedShareCodes(shareCodes as string[]);
+      },
+      (err) => {
+        // Si la lecture échoue (ex. règles Firestore), afficher quand même une liste par défaut
         const newList: GroceryList = {
           id: createId(),
           shareCode: generateShareCode(),
           name: 'Ma Liste',
           items: [],
         };
-        const listRef = listDocRef(newList.shareCode);
-        await setDoc(listRef, newList);
-        const membershipRef = doc(userListsCol, newList.shareCode);
-        await setDoc(membershipRef, {
-          shareCode: newList.shareCode,
-          name: newList.name,
-        });
         setJoinedShareCodes([newList.shareCode]);
         setLists([newList]);
         setActiveListId(newList.id);
         localStorage.setItem(ACTIVE_KEY, newList.id);
-        return;
       }
-
-      const shareCodes = snapshot.docs
-        .map(d => (d.data().shareCode as string | undefined) ?? d.id)
-        .filter(Boolean);
-      setJoinedShareCodes(shareCodes as string[]);
-    });
+    );
 
     return () => unsubscribe();
-  }, [db, userId]);
+  }, [userId]);
 
   // Abonnements en temps réel aux listes correspondantes aux codes rejoints.
   useEffect(() => {
@@ -187,7 +203,7 @@ export function useGroceryList() {
       shareCode: newList.shareCode,
       name: newList.name,
     });
-  }, [db, userId]);
+  }, [userId]);
 
   const joinByShareCode = useCallback(
     (code: string, serverList?: GroceryList) => {
@@ -232,7 +248,7 @@ export function useGroceryList() {
       }
       return next;
     });
-  }, [activeListId, db, userId]);
+  }, [activeListId, userId]);
 
   const renameList = useCallback((id: string, name: string) => {
     updateList(id, l => ({ ...l, name }));
