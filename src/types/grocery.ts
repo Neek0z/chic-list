@@ -1,0 +1,23 @@
+export interface GroceryItem {
+  id: string;
+  name: string;
+  category: string;
+  checked: boolean;
+}
+
+export interface Category {
+  key: string;
+  label: string;
+  emoji: string;
+}
+
+export const CATEGORIES: Category[] = [
+  { key: 'fruits', label: 'Fruits', emoji: '🍎' },
+  { key: 'legumes', label: 'Légumes', emoji: '🥦' },
+  { key: 'viandes', label: 'Viandes', emoji: '🥩' },
+  { key: 'laitiers', label: 'Produits laitiers', emoji: '🧀' },
+  { key: 'epicerie', label: 'Épicerie', emoji: '🍝' },
+  { key: 'boissons', label: 'Boissons', emoji: '🥤' },
+  { key: 'hygiene', label: 'Hygiène', emoji: '🧴' },
+  { key: 'autre', label: 'Autre', emoji: '📦' },
+];
