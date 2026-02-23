@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Pencil, Check, X } from 'lucide-react';
+import { Trash2, Pencil, Check, X, EllipsisVertical } from 'lucide-react';
 import { GroceryItem, CATEGORIES } from '@/types/grocery';
 
 interface GroceryItemCardProps {
@@ -13,10 +13,21 @@ interface GroceryItemCardProps {
 export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: GroceryItemCardProps) {
   const cat = CATEGORIES.find(c => c.key === item.category);
   const [editing, setEditing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [editName, setEditName] = useState(item.name);
   const [editCategory, setEditCategory] = useState(item.category);
   const [editAisle, setEditAisle] = useState(item.aisle?.toString() ?? '');
   const [editQuantity, setEditQuantity] = useState(item.quantity ?? '');
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [menuOpen]);
 
   const handleSave = () => {
     if (!editName.trim()) return;
@@ -144,25 +155,45 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
 
             <span className="text-lg shrink-0">{cat?.emoji}</span>
 
-            <button
-              onClick={() => {
-                setEditName(item.name);
-                setEditCategory(item.category);
-                setEditAisle(item.aisle?.toString() ?? '');
-                setEditQuantity(item.quantity ?? '');
-                setEditing(true);
-              }}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shrink-0"
-            >
-              <Pencil className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => onRemove(item.id)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all shrink-0"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            <div className="relative shrink-0" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+              >
+                <EllipsisVertical className="w-4 h-4" />
+              </button>
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: -4 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-1 bg-card border border-border rounded-xl shadow-lg z-20 overflow-hidden min-w-[140px]"
+                  >
+                    <button
+                      onClick={() => {
+                        setEditName(item.name);
+                        setEditCategory(item.category);
+                        setEditAisle(item.aisle?.toString() ?? '');
+                        setEditQuantity(item.quantity ?? '');
+                        setEditing(true);
+                        setMenuOpen(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                    >
+                      <Pencil className="w-4 h-4" /> Modifier
+                    </button>
+                    <button
+                      onClick={() => { onRemove(item.id); setMenuOpen(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" /> Supprimer
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -123,6 +123,27 @@ const Index = () => {
             </div>
             <DarkModeToggle dark={dark} onToggle={toggleDark} />
           </div>
+          {/* Progress bar */}
+          {items.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold text-muted-foreground">
+                  {checkedCount}/{items.length} complété{checkedCount > 1 ? 's' : ''}
+                </span>
+                <span className="text-xs font-bold text-primary">
+                  {items.length > 0 ? Math.round((checkedCount / items.length) * 100) : 0}%
+                </span>
+              </div>
+              <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-primary rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${items.length > 0 ? (checkedCount / items.length) * 100 : 0}%` }}
+                  transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+            </div>
+          )}
         </motion.header>
 
         {/* Add Item */}
