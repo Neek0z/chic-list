@@ -2,8 +2,17 @@ export interface GroceryItem {
   id: string;
   name: string;
   category: string;
+  aisle?: number;
   checked: boolean;
 }
+
+export interface GroceryList {
+  id: string;
+  name: string;
+  items: GroceryItem[];
+}
+
+export type DisplayMode = 'category' | 'aisle' | 'all';
 
 export interface Category {
   key: string;

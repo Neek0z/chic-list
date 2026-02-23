@@ -54,6 +54,12 @@ export default function GroceryItemCard({ item, onToggle, onRemove }: GroceryIte
         </span>
       </div>
 
+      {item.aisle != null && (
+        <span className="text-xs font-bold bg-accent/20 text-accent-foreground px-2 py-0.5 rounded-lg shrink-0">
+          R{item.aisle}
+        </span>
+      )}
+
       <span className="text-lg shrink-0">{cat?.emoji}</span>
 
       <button
