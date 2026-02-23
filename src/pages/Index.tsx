@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Info, ShoppingCart, Sparkles } from 'lucide-react';
+import { Info, LogOut, ShoppingCart, Sparkles } from 'lucide-react';
 import { useGroceryList } from '@/hooks/useGroceryList';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import { CATEGORIES, DisplayMode, GroceryItem } from '@/types/grocery';
@@ -10,6 +10,7 @@ import ListSelector from '@/components/ListSelector';
 import DisplayModeToggle from '@/components/DisplayModeToggle';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { NavLink } from '@/components/NavLink';
+import { useAuth } from '@/hooks/useAuth';
 
 function sortAlpha(a: GroceryItem, b: GroceryItem) {
   return a.name.localeCompare(b.name, 'fr');
@@ -24,6 +25,7 @@ const Index = () => {
   } = useGroceryList();
   const { dark, toggle: toggleDark } = useDarkMode();
   const [displayMode, setDisplayMode] = useState<DisplayMode>('category');
+  const { signOutUser } = useAuth();
 
   const uncheckedItems = items.filter(i => !i.checked);
   const checkedItems = items.filter(i => i.checked);
@@ -141,6 +143,14 @@ const Index = () => {
                 <Info className="w-4 h-4" />
               </NavLink>
               <DarkModeToggle dark={dark} onToggle={toggleDark} />
+              <button
+                type="button"
+                onClick={signOutUser}
+                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-xs text-muted-foreground hover:text-destructive hover:border-destructive transition-colors"
+                title="Se déconnecter"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
           {/* Progress bar */}

@@ -6,12 +6,21 @@ import {
   doc,
   onSnapshot,
   setDoc,
+  deleteDoc,
 } from 'firebase/firestore';
+import { useAuth } from '@/hooks/useAuth';
 
 const ACTIVE_KEY = 'grocery-active-list';
-const JOINED_KEY = 'grocery-joined-sharecodes';
 
 const LISTS_COLLECTION = 'lists';
+
+function createId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    // @ts-expect-error older libs may not know randomUUID
+    return crypto.randomUUID() as string;
+  }
+  return Math.random().toString(36).slice(2);
+}
 
 function ensureShareCode(list: GroceryList): GroceryList {
   if (!list.shareCode) return { ...list, shareCode: generateShareCode() };
@@ -27,35 +36,48 @@ export function useGroceryList() {
   const [lists, setLists] = useState<GroceryList[]>([]);
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [joinedShareCodes, setJoinedShareCodes] = useState<string[]>([]);
+  const { user } = useAuth();
+  const userId = user?.uid;
 
   const activeList = lists.find(l => l.id === activeListId) || lists[0];
   const items = activeList?.items ?? [];
 
-  // Initialisation : charger les codes rejoints ou créer une liste par défaut.
+  // Initialisation : écouter les listes de l'utilisateur connecté ou créer une liste par défaut.
   useEffect(() => {
-    const savedJoined = localStorage.getItem(JOINED_KEY);
-    if (!savedJoined) {
-      const newList: GroceryList = {
-        id: crypto.randomUUID(),
-        shareCode: generateShareCode(),
-        name: 'Ma Liste',
-        items: [],
-      };
-      const ref = listDocRef(newList.shareCode);
-      void setDoc(ref, newList);
-      localStorage.setItem(JOINED_KEY, JSON.stringify([newList.shareCode]));
-      localStorage.setItem(ACTIVE_KEY, newList.id);
-      setJoinedShareCodes([newList.shareCode]);
-      setLists([newList]);
-      setActiveListId(newList.id);
-      return;
-    }
+    if (!userId) return;
 
-    const shareCodes: string[] = JSON.parse(savedJoined);
-    if (shareCodes.length > 0) {
-      setJoinedShareCodes(shareCodes);
-    }
-  }, []);
+    const userListsCol = collection(db, 'users', userId, 'lists');
+
+    const unsubscribe = onSnapshot(userListsCol, async (snapshot) => {
+      if (snapshot.empty) {
+        const newList: GroceryList = {
+          id: createId(),
+          shareCode: generateShareCode(),
+          name: 'Ma Liste',
+          items: [],
+        };
+        const listRef = listDocRef(newList.shareCode);
+        await setDoc(listRef, newList);
+        const membershipRef = doc(userListsCol, newList.shareCode);
+        await setDoc(membershipRef, {
+          shareCode: newList.shareCode,
+          name: newList.name,
+        });
+        setJoinedShareCodes([newList.shareCode]);
+        setLists([newList]);
+        setActiveListId(newList.id);
+        localStorage.setItem(ACTIVE_KEY, newList.id);
+        return;
+      }
+
+      const shareCodes = snapshot.docs
+        .map(d => (d.data().shareCode as string | undefined) ?? d.id)
+        .filter(Boolean);
+      setJoinedShareCodes(shareCodes as string[]);
+    });
+
+    return () => unsubscribe();
+  }, [db, userId]);
 
   // Abonnements en temps réel aux listes correspondantes aux codes rejoints.
   useEffect(() => {
@@ -68,7 +90,7 @@ export function useGroceryList() {
           const data = snapshot.data() as GroceryList;
           const withShareCode = ensureShareCode({
             ...data,
-            id: data.id || crypto.randomUUID(),
+            id: data.id || createId(),
           });
           setLists(prev => {
             const idx = prev.findIndex(l => l.shareCode === code);
@@ -97,10 +119,6 @@ export function useGroceryList() {
     });
   }, [lists]);
 
-  const persistJoined = useCallback((codes: string[]) => {
-    localStorage.setItem(JOINED_KEY, JSON.stringify(codes));
-  }, []);
-
   const updateList = useCallback(
     (listId: string, updater: (list: GroceryList) => GroceryList) => {
       setLists(prev => {
@@ -118,7 +136,7 @@ export function useGroceryList() {
 
   const addItem = useCallback((name: string, category: string, aisle?: number, quantity?: string) => {
     const newItem: GroceryItem = {
-      id: crypto.randomUUID(),
+      id: createId(),
       name: name.trim(),
       category,
       aisle,
@@ -151,8 +169,10 @@ export function useGroceryList() {
   }, [activeListId, updateList]);
 
   const createList = useCallback((name: string) => {
+    if (!userId) return;
+
     const newList: GroceryList = {
-      id: crypto.randomUUID(),
+      id: createId(),
       shareCode: generateShareCode(),
       name,
       items: [],
@@ -162,29 +182,29 @@ export function useGroceryList() {
     setLists(prev => [...prev, newList]);
     setActiveListId(newList.id);
     localStorage.setItem(ACTIVE_KEY, newList.id);
-    setJoinedShareCodes(prev => {
-      if (prev.includes(newList.shareCode)) return prev;
-      const next = [...prev, newList.shareCode];
-      persistJoined(next);
-      return next;
+    const membershipRef = doc(db, 'users', userId, 'lists', newList.shareCode);
+    void setDoc(membershipRef, {
+      shareCode: newList.shareCode,
+      name: newList.name,
     });
-  }, [persistJoined]);
+  }, [db, userId]);
 
   const joinByShareCode = useCallback(
     (code: string, serverList?: GroceryList) => {
+      if (!userId) return;
+
       const normalizedCode = code.toUpperCase();
-      setJoinedShareCodes(prev => {
-        if (prev.includes(normalizedCode)) return prev;
-        const next = [...prev, normalizedCode];
-        persistJoined(next);
-        return next;
-      });
+      const membershipRef = doc(db, 'users', userId, 'lists', normalizedCode);
+      void setDoc(membershipRef, {
+        shareCode: normalizedCode,
+        name: serverList?.name ?? '',
+      }, { merge: true });
 
       if (serverList) {
         const withShare = ensureShareCode({
           ...serverList,
           shareCode: serverList.shareCode || normalizedCode,
-          id: serverList.id || crypto.randomUUID(),
+          id: serverList.id || createId(),
         });
         setLists(prev => {
           if (prev.find(l => l.shareCode === withShare.shareCode)) return prev;
@@ -192,7 +212,7 @@ export function useGroceryList() {
         });
       }
     },
-    [persistJoined],
+    [db, userId],
   );
 
   const leaveList = useCallback((id: string) => {
@@ -205,15 +225,14 @@ export function useGroceryList() {
       }
       const list = prev.find(l => l.id === id);
       if (list) {
-        setJoinedShareCodes(codes => {
-          const nextCodes = codes.filter(code => code !== list.shareCode);
-          persistJoined(nextCodes);
-          return nextCodes;
-        });
+        if (userId) {
+          const membershipRef = doc(db, 'users', userId, 'lists', list.shareCode);
+          void deleteDoc(membershipRef);
+        }
       }
       return next;
     });
-  }, [activeListId, persistJoined]);
+  }, [activeListId, db, userId]);
 
   const renameList = useCallback((id: string, name: string) => {
     updateList(id, l => ({ ...l, name }));
