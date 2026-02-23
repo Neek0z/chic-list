@@ -43,14 +43,14 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Nom de l'article..."
                   autoFocus
-                  className="flex-[2] bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none"
                 />
                 <input
                   type="text"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="Quantité (ex: 2kg, 3x)"
-                  className="w-32 bg-secondary text-sm font-medium text-secondary-foreground rounded-xl px-3 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                  placeholder="Quantité"
+                  className="w-24 flex-shrink-0 bg-secondary text-sm font-medium text-secondary-foreground rounded-xl px-3 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 sm:w-32"
                 />
                 <input
                   type="number"
@@ -58,7 +58,7 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
                   onChange={(e) => setAisle(e.target.value)}
                   placeholder="Rayon"
                   min={1}
-                  className="w-20 bg-secondary text-center text-sm font-semibold text-secondary-foreground rounded-xl px-2 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                  className="w-16 flex-shrink-0 bg-secondary text-center text-sm font-semibold text-secondary-foreground rounded-xl px-2 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30 sm:w-20"
                 />
               </div>
               <div className="flex flex-wrap gap-2">
