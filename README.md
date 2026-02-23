@@ -17,7 +17,9 @@ Application de liste de courses partagée en temps réel : plusieurs personnes p
 - **Côté client** : le hook `useGroceryList` s’abonne aux documents Firestore correspondant aux codes « rejoints » (stockés en `localStorage`) via **`onSnapshot`**. Toute modification (ajout, édition, cocher, suppression) est envoyée avec **`setDoc`** sur le document de la liste. Les autres clients abonnés à ce document reçoivent la mise à jour instantanément.
 - **Règles Firestore** : pour un usage sans login, les règles de la collection `lists` peuvent autoriser lecture/écriture à tous (à adapter selon ton niveau de sécurité souhaité).
 
-## Project info
+
+
+## Project info (Lovable)
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
