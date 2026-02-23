@@ -1,22 +1,98 @@
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ShoppingCart, Sparkles, Trash2 } from 'lucide-react';
 import { useGroceryList } from '@/hooks/useGroceryList';
-import { CATEGORIES } from '@/types/grocery';
+import { useDarkMode } from '@/hooks/useDarkMode';
+import { CATEGORIES, DisplayMode, GroceryItem } from '@/types/grocery';
 import AddItemForm from '@/components/AddItemForm';
 import GroceryItemCard from '@/components/GroceryItemCard';
+import ListSelector from '@/components/ListSelector';
+import DisplayModeToggle from '@/components/DisplayModeToggle';
+import DarkModeToggle from '@/components/DarkModeToggle';
+
+function sortAlpha(a: GroceryItem, b: GroceryItem) {
+  return a.name.localeCompare(b.name, 'fr');
+}
 
 const Index = () => {
-  const { items, addItem, toggleItem, removeChecked, removeItem, uncheckedCount, checkedCount } = useGroceryList();
+  const {
+    lists, activeList, items,
+    addItem, toggleItem, removeChecked, removeItem,
+    createList, deleteList, renameList, switchList,
+    uncheckedCount, checkedCount,
+  } = useGroceryList();
+  const { dark, toggle: toggleDark } = useDarkMode();
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('category');
 
-  const grouped = CATEGORIES.map(cat => ({
-    ...cat,
-    items: items.filter(i => i.category === cat.key && !i.checked),
-  })).filter(g => g.items.length > 0);
-
+  const uncheckedItems = items.filter(i => !i.checked);
   const checkedItems = items.filter(i => i.checked);
 
+  const renderGroups = () => {
+    if (displayMode === 'category') {
+      const grouped = CATEGORIES.map(cat => ({
+        ...cat,
+        items: uncheckedItems.filter(i => i.category === cat.key).sort(sortAlpha),
+      })).filter(g => g.items.length > 0);
+
+      return grouped.map(group => (
+        <div key={group.key}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+            {group.emoji} {group.label}
+          </h2>
+          <div className="space-y-2">
+            <AnimatePresence mode="popLayout">
+              {group.items.map(item => (
+                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      ));
+    }
+
+    if (displayMode === 'aisle') {
+      const aisleMap = new Map<number | 'none', GroceryItem[]>();
+      uncheckedItems.forEach(item => {
+        const key = item.aisle ?? 'none';
+        if (!aisleMap.has(key)) aisleMap.set(key, []);
+        aisleMap.get(key)!.push(item);
+      });
+      const entries = Array.from(aisleMap.entries()).sort((a, b) => {
+        if (a[0] === 'none') return 1;
+        if (b[0] === 'none') return -1;
+        return (a[0] as number) - (b[0] as number);
+      });
+
+      return entries.map(([aisle, aisleItems]) => (
+        <div key={String(aisle)}>
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+            {aisle === 'none' ? '📦 Sans rayon' : `🛒 Rayon ${aisle}`}
+          </h2>
+          <div className="space-y-2">
+            <AnimatePresence mode="popLayout">
+              {aisleItems.sort(sortAlpha).map(item => (
+                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      ));
+    }
+
+    // all
+    return (
+      <div className="space-y-2">
+        <AnimatePresence mode="popLayout">
+          {uncheckedItems.sort(sortAlpha).map(item => (
+            <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-lg mx-auto px-4 py-6 pb-24">
         {/* Header */}
         <motion.header
@@ -24,23 +100,40 @@ const Index = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <div className="flex items-center gap-3 mb-1">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-primary-foreground" />
+              </div>
+              <div>
+                <ListSelector
+                  lists={lists}
+                  activeList={activeList}
+                  onSwitch={switchList}
+                  onCreate={createList}
+                  onDelete={deleteList}
+                  onRename={renameList}
+                />
+                <p className="text-sm text-muted-foreground">
+                  {uncheckedCount === 0
+                    ? 'Tout est fait ! 🎉'
+                    : `${uncheckedCount} article${uncheckedCount > 1 ? 's' : ''} restant${uncheckedCount > 1 ? 's' : ''}`}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl text-foreground leading-tight">Ma Liste</h1>
-              <p className="text-sm text-muted-foreground">
-                {uncheckedCount === 0
-                  ? 'Tout est fait ! 🎉'
-                  : `${uncheckedCount} article${uncheckedCount > 1 ? 's' : ''} restant${uncheckedCount > 1 ? 's' : ''}`}
-              </p>
-            </div>
+            <DarkModeToggle dark={dark} onToggle={toggleDark} />
           </div>
         </motion.header>
 
         {/* Add Item */}
         <AddItemForm onAdd={addItem} />
+
+        {/* Display mode */}
+        {uncheckedItems.length > 0 && (
+          <div className="mb-4">
+            <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
+          </div>
+        )}
 
         {/* Empty State */}
         {items.length === 0 && (
@@ -57,27 +150,9 @@ const Index = () => {
           </motion.div>
         )}
 
-        {/* Grouped Items */}
+        {/* Items */}
         <div className="space-y-6">
-          {grouped.map(group => (
-            <div key={group.key}>
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">
-                {group.emoji} {group.label}
-              </h2>
-              <div className="space-y-2">
-                <AnimatePresence mode="popLayout">
-                  {group.items.map(item => (
-                    <GroceryItemCard
-                      key={item.id}
-                      item={item}
-                      onToggle={toggleItem}
-                      onRemove={removeItem}
-                    />
-                  ))}
-                </AnimatePresence>
-              </div>
-            </div>
-          ))}
+          {renderGroups()}
         </div>
 
         {/* Checked Items */}
@@ -97,13 +172,8 @@ const Index = () => {
             </div>
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
-                {checkedItems.map(item => (
-                  <GroceryItemCard
-                    key={item.id}
-                    item={item}
-                    onToggle={toggleItem}
-                    onRemove={removeItem}
-                  />
+                {checkedItems.sort(sortAlpha).map(item => (
+                  <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
                 ))}
               </AnimatePresence>
             </div>
