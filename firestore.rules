@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Listes à la racine : tout utilisateur connecté peut lire/écrire (accès par code de partage)
+    match /lists/{listId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

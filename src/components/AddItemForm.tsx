@@ -90,7 +90,7 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
                   onClick={() => setIsOpen(false)}
                   className="px-5 py-3 rounded-xl bg-secondary text-secondary-foreground font-medium hover:bg-muted transition-all"
                 >
-                  Annuler
+                  Fermer
                 </button>
               </div>
             </div>

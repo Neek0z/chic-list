@@ -114,7 +114,7 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
                     onClick={() => setConfirmLeaveId(null)}
                     className="flex-1 py-2.5 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm hover:bg-muted transition-all"
                   >
-                    Annuler
+                    Fermer
                   </button>
                   <button
                     onClick={handleConfirmLeave}

@@ -32,6 +32,29 @@ function listDocRef(shareCode: string) {
   return doc(collection(db, LISTS_COLLECTION), shareCode);
 }
 
+/** Première lettre en majuscule, le reste en minuscules (ex: "LAIT" → "Lait"). */
+function capitalizeFirst(str: string): string {
+  const s = str.trim();
+  if (!s) return s;
+  return s[0].toUpperCase() + s.slice(1).toLowerCase();
+}
+
+/** Retire récursivement les champs undefined pour éviter l'erreur Firestore "Unsupported field value: undefined". */
+function stripUndefined<T>(value: T): T {
+  if (value === undefined) return value;
+  if (value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) {
+    return value.map(item => stripUndefined(item)) as T;
+  }
+  const obj = value as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue;
+    out[k] = stripUndefined(v);
+  }
+  return out as T;
+}
+
 export function useGroceryList() {
   const [lists, setLists] = useState<GroceryList[]>([]);
   const [activeListId, setActiveListId] = useState<string | null>(null);
@@ -66,8 +89,8 @@ export function useGroceryList() {
           // Écriture Firestore en arrière-plan (si les règles le permettent)
           const listRef = listDocRef(newList.shareCode);
           const membershipRef = doc(userListsCol, newList.shareCode);
-          setDoc(listRef, newList)
-            .then(() => setDoc(membershipRef, { shareCode: newList.shareCode, name: newList.name }))
+          setDoc(listRef, stripUndefined(newList))
+            .then(() => setDoc(membershipRef, stripUndefined({ shareCode: newList.shareCode, name: newList.name })))
             .catch(() => {});
           return;
         }
@@ -142,7 +165,7 @@ export function useGroceryList() {
         const updated = next.find(l => l.id === listId);
         if (updated) {
           const ref = listDocRef(updated.shareCode);
-          void setDoc(ref, updated, { merge: false });
+          void setDoc(ref, stripUndefined(updated), { merge: false });
         }
         return next;
       });
@@ -153,7 +176,7 @@ export function useGroceryList() {
   const addItem = useCallback((name: string, category: string, aisle?: number, quantity?: string) => {
     const newItem: GroceryItem = {
       id: createId(),
-      name: name.trim(),
+      name: capitalizeFirst(name),
       category,
       aisle,
       quantity: quantity?.trim() || undefined,
@@ -163,9 +186,11 @@ export function useGroceryList() {
   }, [activeListId, updateList]);
 
   const editItem = useCallback((id: string, updates: Partial<Pick<GroceryItem, 'name' | 'category' | 'aisle' | 'quantity'>>) => {
+    const normalized = { ...updates };
+    if (updates.name !== undefined) normalized.name = capitalizeFirst(updates.name);
     updateList(activeListId, l => ({
       ...l,
-      items: l.items.map(item => item.id === id ? { ...item, ...updates } : item),
+      items: l.items.map(item => item.id === id ? { ...item, ...normalized } : item),
     }));
   }, [activeListId, updateList]);
 
@@ -194,15 +219,15 @@ export function useGroceryList() {
       items: [],
     };
     const ref = listDocRef(newList.shareCode);
-    void setDoc(ref, newList);
+    void setDoc(ref, stripUndefined(newList));
     setLists(prev => [...prev, newList]);
     setActiveListId(newList.id);
     localStorage.setItem(ACTIVE_KEY, newList.id);
     const membershipRef = doc(db, 'users', userId, 'lists', newList.shareCode);
-    void setDoc(membershipRef, {
+    void setDoc(membershipRef, stripUndefined({
       shareCode: newList.shareCode,
       name: newList.name,
-    });
+    }));
   }, [userId]);
 
   const joinByShareCode = useCallback(
@@ -212,10 +237,10 @@ export function useGroceryList() {
 
       const normalizedCode = code.trim().toUpperCase();
       const membershipRef = doc(db, 'users', userId, 'lists', normalizedCode);
-      void setDoc(membershipRef, {
+      void setDoc(membershipRef, stripUndefined({
         shareCode: normalizedCode,
         name: serverList?.name ?? '',
-      }, { merge: true });
+      }), { merge: true });
 
       if (serverList) {
         const withShare = ensureShareCode({
