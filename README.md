@@ -1,4 +1,21 @@
-# Welcome to your Lovable project
+# Chic List — Liste de courses
+
+Application de liste de courses partagée en temps réel : plusieurs personnes peuvent voir et modifier la même liste grâce à un code de partage, sans créer de compte.
+
+## L’app en bref
+
+- **Ajout d’articles** : nom, quantité, rayon, catégorie (fruits, légumes, épicerie, etc.).
+- **Plusieurs listes** : créer des listes (ex. « Maison », « Soirée »), chacune avec un code de partage.
+- **Partage** : envoyer le code à quelqu’un → il saisit le code via « Rejoindre » et accède à la même liste en direct.
+- **Synchronisation temps réel** : les modifications (ajout, cocher, supprimer) apparaissent immédiatement pour tous les utilisateurs de la liste.
+- **Mode clair / sombre** et page **Infos** (bouton ℹ️) pour le mode d’emploi.
+
+## Fonctionnement (backend)
+
+- **Firebase Firestore** sert de base de données en temps réel, sans authentification.
+- **Collection** : `lists`. Chaque liste est un **document** dont l’ID est le **code de partage** (6 caractères, ex. `A3B7K2`). Le document contient : `id`, `shareCode`, `name`, `items` (tableau d’articles avec `id`, `name`, `category`, `aisle`, `quantity`, `checked`).
+- **Côté client** : le hook `useGroceryList` s’abonne aux documents Firestore correspondant aux codes « rejoints » (stockés en `localStorage`) via **`onSnapshot`**. Toute modification (ajout, édition, cocher, suppression) est envoyée avec **`setDoc`** sur le document de la liste. Les autres clients abonnés à ce document reçoivent la mise à jour instantanément.
+- **Règles Firestore** : pour un usage sans login, les règles de la collection `lists` peuvent autoriser lecture/écriture à tous (à adapter selon ton niveau de sécurité souhaité).
 
 ## Project info
 
