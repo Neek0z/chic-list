@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ChevronDown, Trash2, Pencil, Check, X, Copy, UserPlus, Share2 } from 'lucide-react';
+import { Plus, ChevronDown, LogOut, Pencil, Check, X, Copy, UserPlus, Share2 } from 'lucide-react';
 import { GroceryList } from '@/types/grocery';
 import { toast } from 'sonner';
 
@@ -9,11 +9,11 @@ interface ListSelectorProps {
   activeList: GroceryList;
   onSwitch: (id: string) => void;
   onCreate: (name: string) => void;
-  onDelete: (id: string) => void;
+  onLeave: (id: string) => void;
   onRename: (id: string, name: string) => void;
 }
 
-export default function ListSelector({ lists, activeList, onSwitch, onCreate, onDelete, onRename }: ListSelectorProps) {
+export default function ListSelector({ lists, activeList, onSwitch, onCreate, onLeave, onRename }: ListSelectorProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -21,6 +21,9 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
   const [joinCode, setJoinCode] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [confirmLeaveId, setConfirmLeaveId] = useState<string | null>(null);
+
+  const listToLeave = confirmLeaveId ? lists.find(l => l.id === confirmLeaveId) : null;
 
   const handleCreate = () => {
     if (!newName.trim()) return;
@@ -44,10 +47,17 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
   const handleJoin = () => {
     const code = joinCode.trim().toUpperCase();
     if (!code) return;
-    // For now, just show a message — Supabase will handle the actual join
     toast.info(`Rejoindre la liste "${code}" — à brancher avec Supabase`);
     setJoinCode('');
     setJoining(false);
+  };
+
+  const handleConfirmLeave = () => {
+    if (confirmLeaveId) {
+      onLeave(confirmLeaveId);
+      setConfirmLeaveId(null);
+      toast.success('Vous avez quitté la liste');
+    }
   };
 
   return (
@@ -59,6 +69,43 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
         {activeList.name}
         <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
+
+      {/* Confirmation popup */}
+      <AnimatePresence>
+        {confirmLeaveId && listToLeave && (
+          <>
+            <div className="fixed inset-0 z-50 bg-foreground/20 backdrop-blur-sm" onClick={() => setConfirmLeaveId(null)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+            >
+              <div className="bg-card border border-border rounded-2xl shadow-xl p-6 max-w-sm w-full pointer-events-auto">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Quitter la liste ?</h3>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Voulez-vous vraiment quitter <span className="font-semibold text-foreground">« {listToLeave.name} »</span> ? Vous pourrez la rejoindre à nouveau avec le code <span className="font-mono font-bold">{listToLeave.shareCode}</span>.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setConfirmLeaveId(null)}
+                    className="flex-1 py-2.5 rounded-xl bg-secondary text-secondary-foreground font-medium text-sm hover:bg-muted transition-all"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleConfirmLeave}
+                    className="flex-1 py-2.5 rounded-xl bg-destructive text-destructive-foreground font-semibold text-sm hover:opacity-90 transition-all"
+                  >
+                    Quitter
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {open && (
@@ -126,10 +173,11 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
                         </button>
                         {lists.length > 1 && (
                           <button
-                            onClick={() => onDelete(list.id)}
+                            onClick={() => { setConfirmLeaveId(list.id); setOpen(false); }}
                             className="p-1 text-muted-foreground hover:text-destructive"
+                            title="Quitter la liste"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <LogOut className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </>

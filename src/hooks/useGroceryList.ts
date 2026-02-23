@@ -88,7 +88,7 @@ export function useGroceryList() {
     localStorage.setItem(ACTIVE_KEY, newList.id);
   }, []);
 
-  const deleteList = useCallback((id: string) => {
+  const leaveList = useCallback((id: string) => {
     setLists(prev => {
       if (prev.length <= 1) return prev;
       const next = prev.filter(l => l.id !== id);
@@ -116,7 +116,7 @@ export function useGroceryList() {
   return {
     lists, activeList, items,
     addItem, editItem, toggleItem, removeChecked, removeItem,
-    createList, deleteList, renameList, switchList,
+    createList, leaveList, renameList, switchList,
     uncheckedCount, checkedCount,
   };
 }
