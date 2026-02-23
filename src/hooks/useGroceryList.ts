@@ -35,15 +35,23 @@ export function useGroceryList() {
     });
   }, []);
 
-  const addItem = useCallback((name: string, category: string, aisle?: number) => {
+  const addItem = useCallback((name: string, category: string, aisle?: number, quantity?: string) => {
     const newItem: GroceryItem = {
       id: crypto.randomUUID(),
       name: name.trim(),
       category,
       aisle,
+      quantity: quantity?.trim() || undefined,
       checked: false,
     };
     updateList(activeListId, l => ({ ...l, items: [newItem, ...l.items] }));
+  }, [activeListId, updateList]);
+
+  const editItem = useCallback((id: string, updates: Partial<Pick<GroceryItem, 'name' | 'category' | 'aisle' | 'quantity'>>) => {
+    updateList(activeListId, l => ({
+      ...l,
+      items: l.items.map(item => item.id === id ? { ...item, ...updates } : item),
+    }));
   }, [activeListId, updateList]);
 
   const toggleItem = useCallback((id: string) => {
@@ -99,7 +107,7 @@ export function useGroceryList() {
 
   return {
     lists, activeList, items,
-    addItem, toggleItem, removeChecked, removeItem,
+    addItem, editItem, toggleItem, removeChecked, removeItem,
     createList, deleteList, renameList, switchList,
     uncheckedCount, checkedCount,
   };

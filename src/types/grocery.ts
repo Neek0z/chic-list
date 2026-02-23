@@ -3,6 +3,7 @@ export interface GroceryItem {
   name: string;
   category: string;
   aisle?: number;
+  quantity?: string;
   checked: boolean;
 }
 
