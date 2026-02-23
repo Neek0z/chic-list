@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Sparkles } from 'lucide-react';
+import { Info, ShoppingCart, Sparkles } from 'lucide-react';
 import { useGroceryList } from '@/hooks/useGroceryList';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import { CATEGORIES, DisplayMode, GroceryItem } from '@/types/grocery';
@@ -9,6 +9,7 @@ import GroceryItemCard from '@/components/GroceryItemCard';
 import ListSelector from '@/components/ListSelector';
 import DisplayModeToggle from '@/components/DisplayModeToggle';
 import DarkModeToggle from '@/components/DarkModeToggle';
+import { NavLink } from '@/components/NavLink';
 
 function sortAlpha(a: GroceryItem, b: GroceryItem) {
   return a.name.localeCompare(b.name, 'fr');
@@ -18,7 +19,7 @@ const Index = () => {
   const {
     lists, activeList, items,
     addItem, editItem, toggleItem, removeChecked, removeItem,
-    createList, leaveList, renameList, switchList,
+    createList, leaveList, renameList, switchList, joinByShareCode,
     uncheckedCount, checkedCount,
   } = useGroceryList();
   const { dark, toggle: toggleDark } = useDarkMode();
@@ -26,6 +27,15 @@ const Index = () => {
 
   const uncheckedItems = items.filter(i => !i.checked);
   const checkedItems = items.filter(i => i.checked);
+
+  // Éviter le crash quand les listes ne sont pas encore chargées (Firestore)
+  if (!activeList) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Chargement des listes…</p>
+      </div>
+    );
+  }
 
   const renderGroups = () => {
     if (displayMode === 'category') {
@@ -113,6 +123,7 @@ const Index = () => {
                   onCreate={createList}
                   onLeave={leaveList}
                   onRename={renameList}
+                  onJoin={joinByShareCode}
                 />
                 <p className="text-sm text-muted-foreground">
                   {uncheckedCount === 0
@@ -121,7 +132,16 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <DarkModeToggle dark={dark} onToggle={toggleDark} />
+            <div className="flex items-center gap-2">
+              <NavLink
+                to="/infos"
+                className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-xs font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                activeClassName="bg-secondary text-foreground"
+              >
+                <Info className="w-4 h-4" />
+              </NavLink>
+              <DarkModeToggle dark={dark} onToggle={toggleDark} />
+            </div>
           </div>
           {/* Progress bar */}
           {items.length > 0 && (

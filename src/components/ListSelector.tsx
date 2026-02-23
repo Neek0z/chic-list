@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, ChevronDown, LogOut, Pencil, Check, X, Copy, UserPlus, Share2 } from 'lucide-react';
 import { GroceryList } from '@/types/grocery';
+import { db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import { toast } from 'sonner';
 
 interface ListSelectorProps {
@@ -11,9 +13,10 @@ interface ListSelectorProps {
   onCreate: (name: string) => void;
   onLeave: (id: string) => void;
   onRename: (id: string, name: string) => void;
+  onJoin: (code: string, list: GroceryList) => void;
 }
 
-export default function ListSelector({ lists, activeList, onSwitch, onCreate, onLeave, onRename }: ListSelectorProps) {
+export default function ListSelector({ lists, activeList, onSwitch, onCreate, onLeave, onRename, onJoin }: ListSelectorProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
@@ -44,12 +47,28 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
     toast.success('Code copié !');
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     const code = joinCode.trim().toUpperCase();
     if (!code) return;
-    toast.info(`Rejoindre la liste "${code}" — à brancher avec Supabase`);
-    setJoinCode('');
-    setJoining(false);
+
+    try {
+      const ref = doc(db, 'lists', code);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        toast.error('Aucune liste trouvée avec ce code');
+        return;
+      }
+      const data = snap.data() as GroceryList;
+
+      onJoin(code, data);
+
+      toast.success('Liste rejointe avec succès');
+      setJoinCode('');
+      setJoining(false);
+      setOpen(false);
+    } catch (err) {
+      toast.error('Erreur lors de la tentative de rejoindre la liste');
+    }
   };
 
   const handleConfirmLeave = () => {

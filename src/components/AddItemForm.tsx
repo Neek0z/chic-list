@@ -36,21 +36,21 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
             className="overflow-hidden"
           >
             <div className="rounded-2xl bg-card border border-border p-4 mb-3 shadow-sm">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nom de l'article..."
-                autoFocus
-                className="w-full bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none mb-3"
-              />
               <div className="flex gap-2 mb-3">
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Nom de l'article..."
+                  autoFocus
+                  className="flex-[2] bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none"
+                />
                 <input
                   type="text"
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
                   placeholder="Quantité (ex: 2kg, 3x)"
-                  className="flex-1 bg-secondary text-sm font-medium text-secondary-foreground rounded-xl px-3 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                  className="w-32 bg-secondary text-sm font-medium text-secondary-foreground rounded-xl px-3 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
                 />
                 <input
                   type="number"
