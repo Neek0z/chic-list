@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ShoppingCart, Sparkles, Trash2 } from 'lucide-react';
+import { ShoppingCart, Sparkles } from 'lucide-react';
 import { useGroceryList } from '@/hooks/useGroceryList';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import { CATEGORIES, DisplayMode, GroceryItem } from '@/types/grocery';
@@ -183,13 +183,6 @@ const Index = () => {
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
                 ✅ Terminés ({checkedCount})
               </h2>
-              <button
-                onClick={removeChecked}
-                className="flex items-center gap-1.5 text-xs font-medium text-destructive hover:text-destructive/80 transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                Tout supprimer
-              </button>
             </div>
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
