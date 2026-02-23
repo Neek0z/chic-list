@@ -4,21 +4,23 @@ import { Plus } from 'lucide-react';
 import { CATEGORIES } from '@/types/grocery';
 
 interface AddItemFormProps {
-  onAdd: (name: string, category: string, aisle?: number) => void;
+  onAdd: (name: string, category: string, aisle?: number, quantity?: string) => void;
 }
 
 export default function AddItemForm({ onAdd }: AddItemFormProps) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('autre');
   const [aisle, setAisle] = useState('');
+  const [quantity, setQuantity] = useState('');
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    onAdd(name, category, aisle ? parseInt(aisle) : undefined);
+    onAdd(name, category, aisle ? parseInt(aisle) : undefined, quantity || undefined);
     setName('');
     setAisle('');
+    setQuantity('');
   };
 
   return (
@@ -34,14 +36,21 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
             className="overflow-hidden"
           >
             <div className="rounded-2xl bg-card border border-border p-4 mb-3 shadow-sm">
-              <div className="flex gap-3 mb-3">
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Nom de l'article..."
+                autoFocus
+                className="w-full bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none mb-3"
+              />
+              <div className="flex gap-2 mb-3">
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Nom de l'article..."
-                  autoFocus
-                  className="flex-1 bg-transparent text-lg font-medium text-foreground placeholder:text-muted-foreground outline-none"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder="Quantité (ex: 2kg, 3x)"
+                  className="flex-1 bg-secondary text-sm font-medium text-secondary-foreground rounded-xl px-3 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
                 />
                 <input
                   type="number"
@@ -49,7 +58,7 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
                   onChange={(e) => setAisle(e.target.value)}
                   placeholder="Rayon"
                   min={1}
-                  className="w-20 bg-secondary text-center text-sm font-semibold text-secondary-foreground rounded-xl px-2 py-1.5 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
+                  className="w-20 bg-secondary text-center text-sm font-semibold text-secondary-foreground rounded-xl px-2 py-2 outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/30"
                 />
               </div>
               <div className="flex flex-wrap gap-2">

@@ -17,7 +17,7 @@ function sortAlpha(a: GroceryItem, b: GroceryItem) {
 const Index = () => {
   const {
     lists, activeList, items,
-    addItem, toggleItem, removeChecked, removeItem,
+    addItem, editItem, toggleItem, removeChecked, removeItem,
     createList, deleteList, renameList, switchList,
     uncheckedCount, checkedCount,
   } = useGroceryList();
@@ -42,7 +42,7 @@ const Index = () => {
           <div className="space-y-2">
             <AnimatePresence mode="popLayout">
               {group.items.map(item => (
-                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
               ))}
             </AnimatePresence>
           </div>
@@ -71,7 +71,7 @@ const Index = () => {
           <div className="space-y-2">
             <AnimatePresence mode="popLayout">
               {aisleItems.sort(sortAlpha).map(item => (
-                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+                <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
               ))}
             </AnimatePresence>
           </div>
@@ -84,7 +84,7 @@ const Index = () => {
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
           {uncheckedItems.sort(sortAlpha).map(item => (
-            <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+            <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
           ))}
         </AnimatePresence>
       </div>
@@ -173,7 +173,7 @@ const Index = () => {
             <div className="space-y-2">
               <AnimatePresence mode="popLayout">
                 {checkedItems.sort(sortAlpha).map(item => (
-                  <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} />
+                  <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
                 ))}
               </AnimatePresence>
             </div>
