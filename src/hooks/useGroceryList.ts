@@ -1,13 +1,21 @@
 import { useState, useCallback } from 'react';
-import { GroceryList, GroceryItem } from '@/types/grocery';
+import { GroceryList, GroceryItem, generateShareCode } from '@/types/grocery';
 
 const STORAGE_KEY = 'grocery-lists';
 const ACTIVE_KEY = 'grocery-active-list';
 
+function ensureShareCode(list: GroceryList): GroceryList {
+  if (!list.shareCode) return { ...list, shareCode: generateShareCode() };
+  return list;
+}
+
 function loadLists(): GroceryList[] {
   const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) return JSON.parse(saved);
-  const defaultList: GroceryList = { id: crypto.randomUUID(), name: 'Ma Liste', items: [] };
+  if (saved) {
+    const parsed: GroceryList[] = JSON.parse(saved);
+    return parsed.map(ensureShareCode);
+  }
+  const defaultList: GroceryList = { id: crypto.randomUUID(), shareCode: generateShareCode(), name: 'Ma Liste', items: [] };
   return [defaultList];
 }
 
@@ -70,7 +78,7 @@ export function useGroceryList() {
   }, [activeListId, updateList]);
 
   const createList = useCallback((name: string) => {
-    const newList: GroceryList = { id: crypto.randomUUID(), name, items: [] };
+    const newList: GroceryList = { id: crypto.randomUUID(), shareCode: generateShareCode(), name, items: [] };
     setLists(prev => {
       const next = [...prev, newList];
       saveLists(next);

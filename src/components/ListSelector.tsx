@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ChevronDown, Trash2, Pencil, Check, X } from 'lucide-react';
+import { Plus, ChevronDown, Trash2, Pencil, Check, X, Copy, UserPlus, Share2 } from 'lucide-react';
 import { GroceryList } from '@/types/grocery';
+import { toast } from 'sonner';
 
 interface ListSelectorProps {
   lists: GroceryList[];
@@ -15,7 +16,9 @@ interface ListSelectorProps {
 export default function ListSelector({ lists, activeList, onSwitch, onCreate, onDelete, onRename }: ListSelectorProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
   const [newName, setNewName] = useState('');
+  const [joinCode, setJoinCode] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
 
@@ -33,6 +36,20 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
     setEditingId(null);
   };
 
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Code copié !');
+  };
+
+  const handleJoin = () => {
+    const code = joinCode.trim().toUpperCase();
+    if (!code) return;
+    // For now, just show a message — Supabase will handle the actual join
+    toast.info(`Rejoindre la liste "${code}" — à brancher avec Supabase`);
+    setJoinCode('');
+    setJoining(false);
+  };
+
   return (
     <div className="relative">
       <button
@@ -46,14 +63,31 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
       <AnimatePresence>
         {open && (
           <>
-            <div className="fixed inset-0 z-20" onClick={() => { setOpen(false); setCreating(false); }} />
+            <div className="fixed inset-0 z-20" onClick={() => { setOpen(false); setCreating(false); setJoining(false); }} />
             <motion.div
               initial={{ opacity: 0, y: -8, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="absolute left-0 top-full mt-2 w-64 bg-card border border-border rounded-xl shadow-lg z-30 overflow-hidden"
+              className="absolute left-0 top-full mt-2 w-72 bg-card border border-border rounded-xl shadow-lg z-30 overflow-hidden"
             >
+              {/* Share code for active list */}
+              <div className="px-3 py-2.5 border-b border-border bg-secondary/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Share2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Code de partage :</span>
+                  </div>
+                  <button
+                    onClick={() => handleCopyCode(activeList.shareCode)}
+                    className="flex items-center gap-1.5 bg-card border border-border px-2.5 py-1 rounded-lg hover:bg-secondary transition-colors"
+                  >
+                    <span className="text-sm font-bold tracking-widest text-foreground">{activeList.shareCode}</span>
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+
               <div className="p-2 space-y-1 max-h-60 overflow-y-auto">
                 {lists.map(list => (
                   <div
@@ -83,6 +117,7 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
                           {list.name}
                           <span className="text-muted-foreground ml-1.5 text-xs">({list.items.length})</span>
                         </button>
+                        <span className="text-[10px] font-mono text-muted-foreground">{list.shareCode}</span>
                         <button
                           onClick={() => { setEditingId(list.id); setEditName(list.name); }}
                           className="p-1 text-muted-foreground hover:text-foreground"
@@ -103,7 +138,7 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
                 ))}
               </div>
 
-              <div className="border-t border-border p-2">
+              <div className="border-t border-border p-2 space-y-1">
                 {creating ? (
                   <div className="flex items-center gap-2 px-2">
                     <input
@@ -117,14 +152,37 @@ export default function ListSelector({ lists, activeList, onSwitch, onCreate, on
                     <button onClick={handleCreate} className="p-1 text-primary"><Check className="w-4 h-4" /></button>
                     <button onClick={() => setCreating(false)} className="p-1 text-muted-foreground"><X className="w-4 h-4" /></button>
                   </div>
+                ) : joining ? (
+                  <div className="flex items-center gap-2 px-2">
+                    <input
+                      value={joinCode}
+                      onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                      onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                      placeholder="Code (ex: A3B7K2)"
+                      autoFocus
+                      maxLength={6}
+                      className="flex-1 bg-transparent text-sm font-mono tracking-widest text-foreground placeholder:text-muted-foreground outline-none"
+                    />
+                    <button onClick={handleJoin} className="p-1 text-primary"><Check className="w-4 h-4" /></button>
+                    <button onClick={() => setJoining(false)} className="p-1 text-muted-foreground"><X className="w-4 h-4" /></button>
+                  </div>
                 ) : (
-                  <button
-                    onClick={() => setCreating(true)}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Nouvelle liste
-                  </button>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => setCreating(true)}
+                      className="flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Nouvelle liste
+                    </button>
+                    <button
+                      onClick={() => setJoining(true)}
+                      className="flex-1 flex items-center gap-2 px-3 py-2 text-sm font-medium text-accent-foreground hover:bg-accent/10 rounded-lg transition-colors"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Rejoindre
+                    </button>
+                  </div>
                 )}
               </div>
             </motion.div>
