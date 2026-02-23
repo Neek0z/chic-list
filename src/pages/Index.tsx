@@ -18,7 +18,7 @@ const Index = () => {
   const {
     lists, activeList, items,
     addItem, editItem, toggleItem, removeChecked, removeItem,
-    createList, deleteList, renameList, switchList,
+    createList, leaveList, renameList, switchList,
     uncheckedCount, checkedCount,
   } = useGroceryList();
   const { dark, toggle: toggleDark } = useDarkMode();
@@ -111,7 +111,7 @@ const Index = () => {
                   activeList={activeList}
                   onSwitch={switchList}
                   onCreate={createList}
-                  onDelete={deleteList}
+                  onLeave={leaveList}
                   onRename={renameList}
                 />
                 <p className="text-sm text-muted-foreground">
