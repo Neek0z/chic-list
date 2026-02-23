@@ -1,4 +1,4 @@
-# Chic List — Liste de courses
+# ChickList — Liste de courses
 
 Application de liste de courses partagée en temps réel : plusieurs personnes peuvent voir et modifier la même liste grâce à un code de partage, sans créer de compte.
 

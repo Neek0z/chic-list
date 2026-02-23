@@ -1,0 +1,17 @@
+{
+  "name": "ChickList",
+  "short_name": "ChickList",
+  "description": "Liste de courses partagée en temps réel",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#4D9E7E",
+  "theme_color": "#4D9E7E",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
