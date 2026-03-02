@@ -15,7 +15,8 @@ Application de liste de courses partagée en temps réel : plusieurs personnes p
 - **Firebase Firestore** sert de base de données en temps réel, sans authentification.
 - **Collection** : `lists`. Chaque liste est un **document** dont l’ID est le **code de partage** (6 caractères, ex. `A3B7K2`). Le document contient : `id`, `shareCode`, `name`, `items` (tableau d’articles avec `id`, `name`, `category`, `aisle`, `quantity`, `checked`).
 - **Côté client** : le hook `useGroceryList` s’abonne aux documents Firestore correspondant aux codes « rejoints » (stockés en `localStorage`) via **`onSnapshot`**. Toute modification (ajout, édition, cocher, suppression) est envoyée avec **`setDoc`** sur le document de la liste. Les autres clients abonnés à ce document reçoivent la mise à jour instantanément.
-- **Règles Firestore** : avec authentification Google, il faut autoriser l’accès aux listes de l’utilisateur et à la collection partagée, par exemple :
+- **Règles Firestore** : avec authentification Google, il faut autoriser l’accès aux listes de l’utilisateur et à la co
+llection partagée, par exemple :
   - `users/{userId}/lists/{listId}` : `allow read, write: if request.auth != null && request.auth.uid == userId;`
   - `lists/{listId}` : `allow read, write: if request.auth != null;`  
   (Firebase Console → Firestore → Règles.)

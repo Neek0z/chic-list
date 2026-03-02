@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Info, LogOut, ShoppingCart, Sparkles } from 'lucide-react';
+import { Info, LogOut, ShoppingCart, Sparkles, Search } from 'lucide-react';
 import { useGroceryList } from '@/hooks/useGroceryList';
 import { useDarkMode } from '@/hooks/useDarkMode';
 import { CATEGORIES, DisplayMode, GroceryItem } from '@/types/grocery';
@@ -25,10 +25,15 @@ const Index = () => {
   } = useGroceryList();
   const { dark, toggle: toggleDark } = useDarkMode();
   const [displayMode, setDisplayMode] = useState<DisplayMode>('category');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [shoppingMode, setShoppingMode] = useState(false);
   const { signOutUser } = useAuth();
-
-  const uncheckedItems = items.filter(i => !i.checked);
-  const checkedItems = items.filter(i => i.checked);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleItems = normalizedQuery
+    ? items.filter(i => i.name.toLowerCase().includes(normalizedQuery))
+    : items;
+  const displayItems = shoppingMode ? visibleItems.filter(i => !i.checked) : visibleItems;
 
   // Éviter le crash quand les listes ne sont pas encore chargées (Firestore)
   if (!activeList) {
@@ -43,7 +48,7 @@ const Index = () => {
     if (displayMode === 'category') {
       const grouped = CATEGORIES.map(cat => ({
         ...cat,
-        items: uncheckedItems.filter(i => i.category === cat.key).sort(sortAlpha),
+        items: displayItems.filter(i => i.category === cat.key).sort(sortAlpha),
       })).filter(g => g.items.length > 0);
 
       return grouped.map(group => (
@@ -64,7 +69,7 @@ const Index = () => {
 
     if (displayMode === 'aisle') {
       const aisleMap = new Map<number | 'none', GroceryItem[]>();
-      uncheckedItems.forEach(item => {
+      displayItems.forEach(item => {
         const key = item.aisle ?? 'none';
         if (!aisleMap.has(key)) aisleMap.set(key, []);
         aisleMap.get(key)!.push(item);
@@ -95,7 +100,7 @@ const Index = () => {
     return (
       <div className="space-y-2">
         <AnimatePresence mode="popLayout">
-          {uncheckedItems.sort(sortAlpha).map(item => (
+          {[...displayItems].sort(sortAlpha).map(item => (
             <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
           ))}
         </AnimatePresence>
@@ -106,11 +111,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
       <div className="max-w-lg mx-auto px-4 py-6 pb-24">
-        {/* Header */}
+        {/* Header (sticky pour rester visible au scroll) */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="sticky top-0 z-20 bg-background pb-2 -mx-4 px-4 pt-1 mb-2"
         >
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-3">
@@ -153,16 +158,36 @@ const Index = () => {
               </button>
             </div>
           </div>
-          {/* Progress bar */}
+          {/* Progress bar + search */}
           {items.length > 0 && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-semibold text-muted-foreground">
-                  {checkedCount}/{items.length} complété{checkedCount > 1 ? 's' : ''}
-                </span>
-                <span className="text-xs font-bold text-primary">
-                  {items.length > 0 ? Math.round((checkedCount / items.length) * 100) : 0}%
-                </span>
+            <div className="mt-2 pb-1">
+              <div className="mt-1 flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {checkedCount}/{items.length} complété{checkedCount > 1 ? 's' : ''}
+                  </span>
+                  <span className="text-xs font-bold text-primary">
+                    {items.length > 0 ? Math.round((checkedCount / items.length) * 100) : 0}%
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchOpen(prev => {
+                      const next = !prev;
+                      if (!next) setSearchQuery('');
+                      return next;
+                    });
+                  }}
+                  className={`w-8 h-8 rounded-full border flex items-center justify-center text-[11px] transition-colors ${
+                    searchOpen
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border text-muted-foreground hover:bg-secondary'
+                  }`}
+                  title="Rechercher dans la liste"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
               </div>
               <div className="h-2 bg-secondary rounded-full overflow-hidden">
                 <motion.div
@@ -172,16 +197,52 @@ const Index = () => {
                   transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 />
               </div>
+              {searchOpen && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-sm">
+                    <Search className="w-4 h-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Rechercher un article..."
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </motion.header>
 
-        {/* Add Item */}
-        <AddItemForm onAdd={addItem} />
+        {/* Add Item (toute la place) + Mode course (même hauteur) */}
+        {items.length > 0 ? (
+          <div className="flex gap-3 pb-4 items-stretch">
+            <div className="flex-1 min-w-0">
+              <AddItemForm onAdd={addItem} />
+            </div>
+            <button
+              type="button"
+              onClick={() => setShoppingMode(prev => !prev)}
+              title="Mode course"
+              className={`flex-shrink-0 flex items-center justify-center rounded-2xl px-3 transition-all ${
+                shoppingMode
+                  ? 'bg-primary text-primary-foreground shadow-lg'
+                  : 'bg-secondary text-secondary-foreground hover:bg-muted'
+              }`}
+            >
+              <ShoppingCart className="w-5 h-5" />
+            </button>
+          </div>
+        ) : (
+          <div className="pb-4">
+            <AddItemForm onAdd={addItem} />
+          </div>
+        )}
 
         {/* Display mode */}
-        {uncheckedItems.length > 0 && (
-          <div className="mb-4">
+        {items.length > 0 && (
+          <div className="mb-4 flex justify-center">
             <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
           </div>
         )}
@@ -205,24 +266,6 @@ const Index = () => {
         <div className="space-y-6">
           {renderGroups()}
         </div>
-
-        {/* Checked Items */}
-        {checkedItems.length > 0 && (
-          <div className="mt-8">
-            <div className="flex items-center justify-between mb-2 px-1">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                ✅ Terminés ({checkedCount})
-              </h2>
-            </div>
-            <div className="space-y-2">
-              <AnimatePresence mode="popLayout">
-                {checkedItems.sort(sortAlpha).map(item => (
-                  <GroceryItemCard key={item.id} item={item} onToggle={toggleItem} onRemove={removeItem} onEdit={editItem} />
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

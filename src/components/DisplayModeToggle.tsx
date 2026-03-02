@@ -14,12 +14,12 @@ const modes: { key: DisplayMode; label: string; icon: React.ReactNode }[] = [
 
 export default function DisplayModeToggle({ mode, onChange }: DisplayModeToggleProps) {
   return (
-    <div className="flex bg-secondary rounded-xl p-1 gap-0.5">
+    <div className="flex w-full bg-secondary rounded-xl p-1 gap-0.5 justify-center">
       {modes.map(m => (
         <button
           key={m.key}
           onClick={() => onChange(m.key)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
             mode === m.key
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'

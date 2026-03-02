@@ -24,7 +24,7 @@ export default function AddItemForm({ onAdd }: AddItemFormProps) {
   };
 
   return (
-    <div className="sticky top-0 z-10 pb-4">
+    <div>
       <AnimatePresence>
         {isOpen && (
           <motion.form

@@ -58,21 +58,21 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="p-4 space-y-3"
+            className="p-3 space-y-2.5"
           >
             <input
               value={editName}
               onChange={e => setEditName(e.target.value)}
               autoFocus
-              className="w-full bg-transparent text-base font-medium text-foreground outline-none"
+              className="w-full bg-transparent text-sm font-medium text-foreground outline-none"
               onKeyDown={e => e.key === 'Enter' && handleSave()}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <input
                 value={editQuantity}
                 onChange={e => setEditQuantity(e.target.value)}
                 placeholder="Quantité"
-                className="flex-1 bg-secondary text-sm text-secondary-foreground rounded-lg px-3 py-1.5 outline-none placeholder:text-muted-foreground"
+              className="flex-1 bg-secondary text-xs text-secondary-foreground rounded-lg px-2.5 py-1 outline-none placeholder:text-muted-foreground"
               />
               <input
                 type="number"
@@ -80,16 +80,16 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
                 onChange={e => setEditAisle(e.target.value)}
                 placeholder="Rayon"
                 min={1}
-                className="w-20 bg-secondary text-center text-sm text-secondary-foreground rounded-lg px-2 py-1.5 outline-none placeholder:text-muted-foreground"
+              className="w-16 bg-secondary text-center text-xs text-secondary-foreground rounded-lg px-2 py-1 outline-none placeholder:text-muted-foreground"
               />
             </div>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1">
               {CATEGORIES.map(c => (
                 <button
                   key={c.key}
                   type="button"
                   onClick={() => setEditCategory(c.key)}
-                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                  className={`px-2 py-0.5 rounded-full text-[11px] font-medium transition-all ${
                     editCategory === c.key
                       ? 'bg-primary text-primary-foreground scale-105'
                       : 'bg-secondary text-secondary-foreground'
@@ -99,20 +99,20 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
                 </button>
               ))}
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground font-semibold py-2 rounded-xl text-sm">
+            <div className="flex gap-1.5">
+              <button onClick={handleSave} className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground font-semibold py-1.5 rounded-xl text-xs">
                 <Check className="w-4 h-4" /> Enregistrer
               </button>
-              <button onClick={() => setEditing(false)} className="px-4 py-2 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium">
+              <button onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-medium">
                 <X className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
         ) : (
-          <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3 p-4">
+          <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2.5 p-3">
             <button
               onClick={() => onToggle(item.id)}
-              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${
+              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 shrink-0 ${
                 item.checked
                   ? 'bg-success border-success'
                   : 'border-muted-foreground/30 hover:border-primary'
@@ -123,7 +123,7 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  className="w-4 h-4 text-success-foreground"
+                  className="w-3.5 h-3.5 text-success-foreground"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -135,30 +135,30 @@ export default function GroceryItemCard({ item, onToggle, onRemove, onEdit }: Gr
             </button>
 
             <div className="flex-1 min-w-0">
-              <span className={`text-base font-medium transition-all duration-300 ${
+              <span className={`text-sm font-medium transition-all duration-300 ${
                 item.checked ? 'line-through text-muted-foreground' : 'text-foreground'
               }`}>
                 {item.name}
               </span>
               {item.quantity && (
-                <span className="ml-2 text-xs font-semibold text-muted-foreground bg-secondary px-2 py-0.5 rounded-md">
+                <span className="ml-2 text-[11px] font-semibold text-muted-foreground bg-secondary px-1.5 py-0.5 rounded-md">
                   {item.quantity}
                 </span>
               )}
             </div>
 
             {item.aisle != null && (
-              <span className="text-xs font-bold bg-accent/20 text-accent-foreground px-2 py-0.5 rounded-lg shrink-0">
+              <span className="text-[11px] font-bold bg-accent/20 text-accent-foreground px-1.5 py-0.5 rounded-lg shrink-0">
                 R{item.aisle}
               </span>
             )}
 
-            <span className="text-lg shrink-0">{cat?.emoji}</span>
+            <span className="text-base shrink-0">{cat?.emoji}</span>
 
             <div className="relative shrink-0" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
               >
                 <EllipsisVertical className="w-4 h-4" />
               </button>
