@@ -26,8 +26,7 @@ export default function AddItemForm({ onAdd, prefillName = '' }: AddItemFormProp
   };
 
   const handleOpen = () => {
-    const candidate = prefillName.trim();
-    setName((prev) => (prev.trim() ? prev : candidate));
+    setName(prefillName.trim());
     setIsOpen(true);
   };
 

@@ -1,9 +1,11 @@
 import { DisplayMode } from '@/types/grocery';
-import { LayoutGrid, ArrowDownNarrowWide, List } from 'lucide-react';
+import { LayoutGrid, ArrowDownNarrowWide, List, ShoppingCart } from 'lucide-react';
 
 interface DisplayModeToggleProps {
   mode: DisplayMode;
   onChange: (mode: DisplayMode) => void;
+  shoppingMode: boolean;
+  onToggleShoppingMode: () => void;
 }
 
 const modes: { key: DisplayMode; label: string; icon: React.ReactNode }[] = [
@@ -12,7 +14,12 @@ const modes: { key: DisplayMode; label: string; icon: React.ReactNode }[] = [
   { key: 'all', label: 'Tout', icon: <List className="w-4 h-4" /> },
 ];
 
-export default function DisplayModeToggle({ mode, onChange }: DisplayModeToggleProps) {
+export default function DisplayModeToggle({
+  mode,
+  onChange,
+  shoppingMode,
+  onToggleShoppingMode,
+}: DisplayModeToggleProps) {
   return (
     <div className="flex w-full bg-secondary rounded-xl p-1 gap-0.5 justify-center">
       {modes.map(m => (
@@ -29,6 +36,19 @@ export default function DisplayModeToggle({ mode, onChange }: DisplayModeToggleP
           <span className="hidden sm:inline">{m.label}</span>
         </button>
       ))}
+      <button
+        type="button"
+        onClick={onToggleShoppingMode}
+        title="Mode course"
+        className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          shoppingMode
+            ? 'bg-emerald-500 text-white shadow-sm hover:bg-emerald-500'
+            : 'text-muted-foreground hover:text-foreground'
+        }`}
+      >
+        <ShoppingCart className="w-4 h-4" />
+        <span className="hidden sm:inline">Mode course</span>
+      </button>
     </div>
   );
 }

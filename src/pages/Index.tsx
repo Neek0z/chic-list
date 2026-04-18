@@ -215,28 +215,15 @@ const Index = () => {
           )}
         </motion.header>
 
-        {/* Mode course */}
-        {items.length > 0 && (
-          <div className="pb-4 flex justify-end">
-            <button
-              type="button"
-              onClick={() => setShoppingMode(prev => !prev)}
-              title="Mode course"
-              className={`flex-shrink-0 flex items-center justify-center rounded-2xl px-3 py-3 transition-all ${
-                shoppingMode
-                  ? 'bg-primary text-primary-foreground shadow-lg'
-                  : 'bg-secondary text-secondary-foreground hover:bg-muted'
-              }`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
         {/* Display mode */}
         {items.length > 0 && (
           <div className="mb-4 flex justify-center">
-            <DisplayModeToggle mode={displayMode} onChange={setDisplayMode} />
+            <DisplayModeToggle
+              mode={displayMode}
+              onChange={setDisplayMode}
+              shoppingMode={shoppingMode}
+              onToggleShoppingMode={() => setShoppingMode(prev => !prev)}
+            />
           </div>
         )}
 
