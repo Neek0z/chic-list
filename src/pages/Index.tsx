@@ -215,17 +215,14 @@ const Index = () => {
           )}
         </motion.header>
 
-        {/* Add Item (toute la place) + Mode course (même hauteur) */}
-        {items.length > 0 ? (
-          <div className="flex gap-3 pb-4 items-stretch">
-            <div className="flex-1 min-w-0">
-              <AddItemForm onAdd={addItem} />
-            </div>
+        {/* Mode course */}
+        {items.length > 0 && (
+          <div className="pb-4 flex justify-end">
             <button
               type="button"
               onClick={() => setShoppingMode(prev => !prev)}
               title="Mode course"
-              className={`flex-shrink-0 flex items-center justify-center rounded-2xl px-3 transition-all ${
+              className={`flex-shrink-0 flex items-center justify-center rounded-2xl px-3 py-3 transition-all ${
                 shoppingMode
                   ? 'bg-primary text-primary-foreground shadow-lg'
                   : 'bg-secondary text-secondary-foreground hover:bg-muted'
@@ -233,10 +230,6 @@ const Index = () => {
             >
               <ShoppingCart className="w-5 h-5" />
             </button>
-          </div>
-        ) : (
-          <div className="pb-4">
-            <AddItemForm onAdd={addItem} />
           </div>
         )}
 
@@ -266,6 +259,9 @@ const Index = () => {
         <div className="space-y-6">
           {renderGroups()}
         </div>
+      </div>
+      <div className="fixed right-5 z-40 bottom-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] sm:right-6 sm:bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)]">
+        <AddItemForm onAdd={addItem} prefillName={searchQuery} />
       </div>
     </div>
   );
